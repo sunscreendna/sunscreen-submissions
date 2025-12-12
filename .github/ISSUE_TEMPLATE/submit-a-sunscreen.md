@@ -1,11 +1,13 @@
 ---
 name: Submit a sunscreen
 about: Submit a sunscreen for review by the Sunscreen DNA project.
-title: ''
+title: 'title: "Brand – Product name"'
 labels: new
 assignees: ''
 
 ---
+
+⚠️ Please update the issue title to: **Brand – Product name**
 
 ### Brand name
 (e.g., La Roche-Posay)
