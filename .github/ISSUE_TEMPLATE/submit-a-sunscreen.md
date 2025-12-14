@@ -9,6 +9,8 @@ assignees: ''
 
 ⚠️ Please update the issue title to: **Brand – Product name**
 
+<i>Please fill out as much information as you can. Submissions are reviewed manually.</i>
+
 ### Brand name
 (e.g., La Roche-Posay)
 
