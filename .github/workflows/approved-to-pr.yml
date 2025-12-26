@@ -1,0 +1,39 @@
+name: Approved sunscreen → draft processing
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  process-approved-sunscreen:
+    if: github.event.label.name == 'approved'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log trigger info
+        run: |
+          echo "Issue #${{ github.event.issue.number }} labeled 'approved'"
+          echo "Title: ${{ github.event.issue.title }}"
+
+      - name: Dump issue body (for debugging)
+        run: |
+          echo "----- ISSUE BODY START -----"
+          echo "${{ github.event.issue.body }}"
+          echo "----- ISSUE BODY END -----"
+
+      - name: Post acknowledgement comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `✅ **Submission approved**
+
+This sunscreen has been marked as **approved**.
+Automation has detected the approval and will process it shortly.
+
+_(Draft processing only — no data has been published yet.)_`
+            });
