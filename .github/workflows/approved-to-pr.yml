@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Log trigger info
         run: |
           echo "Issue #${{ github.event.issue.number }} labeled 'approved'"
@@ -26,14 +29,13 @@ jobs:
         with:
           script: |
             const issue = context.payload.issue;
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              body: `✅ **Submission approved**
-
-This sunscreen has been marked as **approved**.
-Automation has detected the approval and will process it shortly.
-
-_(Draft processing only — no data has been published yet.)_`
+              body: "✅ **Submission approved**\n\n" +
+                    "This sunscreen has been marked as **approved**.\n" +
+                    "Automation has detected the approval and will process it shortly.\n\n" +
+                    "_(Draft processing only — no data has been published yet.)_"
             });
