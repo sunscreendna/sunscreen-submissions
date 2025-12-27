@@ -28,7 +28,7 @@ spf:
 pa_rating:
 uvas_rating:
 uv_filters:
-korean:  # optional — set during review if applicable
+korean:  # optional — will be set during review
   -
 source_url:
 water_resistant:
