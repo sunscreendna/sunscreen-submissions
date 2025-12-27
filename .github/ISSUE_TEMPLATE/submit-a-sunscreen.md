@@ -19,16 +19,16 @@ Please fill out as much as you can below.
 If you're unsure about a field, it's okay to leave it blank.
 
 ```yaml
-brand:
-product_name:
+brand: 
+product_name: 
 
-ingredients:
+ingredients: 
 
-spf:
-pa_rating:
-uva_rating (EU):
+spf: 
+pa_rating: 
+uva_rating (EU): 
 korean:  # optional — will be set during review
 
-source_url:
-water_resistant:
-notes:
+source_url: 
+water_resistant: 
+notes: 
