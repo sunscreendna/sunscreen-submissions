@@ -28,22 +28,14 @@ jobs:
           echo "----- ISSUE BODY END -----"
 
       - name: Post acknowledgement comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue = context.payload.issue;
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -d '{
+              "body": "✅ **Submission approved**\n\nThis sunscreen has been marked as **approved**.\nAutomation has detected the approval and will process it shortly.\n\n_(Draft processing only — no data has been published yet.)_"
+            }'
 
-            async function run() {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body:
-                  "✅ **Submission approved**\n\n" +
-                  "This sunscreen has been marked as **approved**.\n" +
-                  "Automation has detected the approval and will process it shortly.\n\n" +
-                  "_(Draft processing only — no data has been published yet.)_"
-              });
-            }
-
-            await run();
