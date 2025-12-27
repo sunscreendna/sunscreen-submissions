@@ -1,4 +1,5 @@
 import yaml from "js-yaml";
+import { UV_FILTERS } from "./uv-filters.js";
 
 /**
  * Extract the fenced ```yaml block from the issue body
@@ -23,6 +24,35 @@ function normalizeYesNo(value) {
 }
 
 /**
+ * Detect UV filters from the INCI ingredient list
+ */
+function detectUvFilters(ingredients) {
+  if (!ingredients) return [];
+
+  const text = ingredients.toLowerCase();
+  const detected = [];
+
+  for (const filter of UV_FILTERS) {
+    const names = [
+      filter.inci,
+      ...(filter.aka || [])
+    ];
+
+    for (const name of names) {
+      if (text.includes(name.toLowerCase())) {
+        detected.push({
+          inci: filter.inci,
+          type: filter.type
+        });
+        break;
+      }
+    }
+  }
+
+  return detected;
+}
+
+/**
  * Validate required fields
  */
 function validateRequired(data) {
@@ -44,6 +74,8 @@ function validateRequired(data) {
  * Build canonical sunscreen object (dry run)
  */
 function buildCanonical(data) {
+  const detectedUvFilters = detectUvFilters(data.ingredients_inci);
+
   return {
     brand: data.brand ?? null,
     product_name: data.product_name ?? null,
@@ -61,9 +93,7 @@ function buildCanonical(data) {
     pa_rating: data.pa_rating ?? null,
     uvas_rating: data.uvas_rating ?? null,
 
-    uv_filters: Array.isArray(data.uv_filters)
-      ? data.uv_filters.filter(Boolean)
-      : [],
+    uv_filters: detectedUvFilters,
 
     ingredients_inci: data.ingredients_inci ?? null,
     source_url: data.source_url ?? null,
