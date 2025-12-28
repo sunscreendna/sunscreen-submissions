@@ -21,7 +21,7 @@ jobs:
           echo "Issue #${{ github.event.issue.number }} labeled 'approved'"
           echo "Title: ${{ github.event.issue.title }}"
 
-      - name: Parse sunscreen YAML (dry run)
+      - name: Parse sunscreen 
         working-directory: .github/scripts
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
