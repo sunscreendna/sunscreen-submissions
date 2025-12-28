@@ -187,6 +187,11 @@ if (process.env.ISSUE_BODY) {
     exportEnv("SUNSCREEN_ID", canonical.id);
     exportEnv("SUNSCREEN_BRAND", canonical.brand);
     exportEnv("SUNSCREEN_PRODUCT", canonical.product);
+    exportEnv(
+  "SUNSCREEN_CANONICAL_JSON",
+  JSON.stringify(canonical)
+);
+
 
     console.log("🧪 Canonical sunscreen object (dry run):");
     console.log(JSON.stringify(canonical, null, 2));
