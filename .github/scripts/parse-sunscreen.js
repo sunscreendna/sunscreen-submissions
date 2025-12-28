@@ -1,15 +1,22 @@
-import yaml from "js-yaml";
 import { UV_FILTERS } from "./uv-filters.js";
 
 /**
- * Extract the fenced ```yaml block from the issue body
+ * Extract the text that follows a given markdown section heading
+ * Example:
+ * ### Brand name
+ * Abib
  */
-function extractYamlBlock(body) {
-  const match = body.match(/```yaml([\s\S]*?)```/i);
-  if (!match) {
-    throw new Error("No fenced YAML block found in issue body.");
-  }
-  return match[1];
+function extractSection(body, heading) {
+  const regex = new RegExp(
+    `### ${heading}\\n([\\s\\S]*?)(?=\\n### |$)`,
+    "i"
+  );
+  const match = body.match(regex);
+  if (!match) return null;
+
+  return match[1]
+    .replace(/```[a-z]*?/gi, "") // remove code fences if present
+    .trim();
 }
 
 /**
@@ -17,14 +24,14 @@ function extractYamlBlock(body) {
  */
 function normalizeYesNo(value) {
   if (!value) return null;
-  const v = String(value).trim().toLowerCase();
-  if (v === "yes" || v === "true") return true;
-  if (v === "no" || v === "false") return false;
+  const v = value.trim().toLowerCase();
+  if (v === "yes") return true;
+  if (v === "no") return false;
   return null;
 }
 
 /**
- * Detect UV filters from the INCI ingredient list
+ * Detect UV filters from ingredient list
  */
 function detectUvFilters(ingredients) {
   if (!ingredients) return [];
@@ -56,12 +63,8 @@ function detectUvFilters(ingredients) {
  * Validate required fields
  */
 function validateRequired(data) {
-  const required = ["brand", "product_name"];
-  const missing = required.filter(
-    (f) =>
-      !data[f] ||
-      (Array.isArray(data[f]) && data[f].length === 0)
-  );
+  const required = ["brand", "product_name", "ingredients_inci"];
+  const missing = required.filter((f) => !data[f]);
 
   if (missing.length) {
     throw new Error(
@@ -74,36 +77,45 @@ function validateRequired(data) {
  * Build canonical sunscreen object (dry run)
  */
 function buildCanonical(data) {
-  const detectedUvFilters = detectUvFilters(data.ingredients_inci);
+  const uvFilters = detectUvFilters(data.ingredients_inci);
 
   return {
-    brand: data.brand ?? null,
-    product_name: data.product_name ?? null,
+    brand: data.brand,
+    product_name: data.product_name,
+
+    spf: data.spf
+      ? Number(data.spf.replace(/\D/g, "")) || null
+      : null,
+
+    pa_rating: data.pa_rating || null,
 
     korean: normalizeYesNo(data.korean),
 
-    spf: data.spf
-      ? Number(String(data.spf).replace(/\D/g, "")) || null
-      : null,
+    uv_filters: uvFilters,
 
-    pa_rating: data.pa_rating ?? null,
-    uvas_rating: data.uvas_rating ?? null,
-
-    uv_filters: detectedUvFilters,
-
-    ingredients_inci: data.ingredients_inci ?? null,
-    source_url: data.source_url ?? null,
-    notes: data.notes ?? null,
+    ingredients_inci: data.ingredients_inci,
+    source_url: data.source_url || null,
+    notes: data.notes || null
   };
 }
 
 /**
- * Entry point when run by GitHub Actions
+ * Entry point (GitHub Actions)
  */
 if (process.env.ISSUE_BODY) {
   try {
-    const yamlText = extractYamlBlock(process.env.ISSUE_BODY);
-    const parsed = yaml.load(yamlText);
+    const body = process.env.ISSUE_BODY;
+
+    const parsed = {
+      brand: extractSection(body, "Brand name"),
+      product_name: extractSection(body, "Product name"),
+      spf: extractSection(body, "SPF \\(if known\\)"),
+      pa_rating: extractSection(body, "PA / UVA rating \\(if known\\)"),
+      ingredients_inci: extractSection(body, "Ingredients \\(INCI\\)"),
+      korean: extractSection(body, "Is this a Korean product\\?"),
+      source_url: extractSection(body, "Source URL"),
+      notes: extractSection(body, "Notes \\(optional\\)")
+    };
 
     validateRequired(parsed);
 
