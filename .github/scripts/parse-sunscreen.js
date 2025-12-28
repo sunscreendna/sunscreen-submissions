@@ -29,6 +29,25 @@ function normalizeYesNo(value) {
 }
 
 /**
+ * Generate deterministic sunscreen ID (brand + product, no SPF/PA)
+ */
+function generateId(brand, product) {
+  const normalize = (str) => {
+    return str
+      .toLowerCase()
+      .replace(/\bspf\s*\d+\+?\b/gi, "")
+      .replace(/\bpa\+{1,4}\b/gi, "")
+      .replace(/[™®©]/g, "")
+      .replace(/[\s/_]+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  };
+
+  return `${normalize(brand)}-${normalize(product)}`;
+}
+
+/**
  * Split INCI ingredient string into array
  */
 function splitIngredients(ingredients) {
@@ -102,12 +121,15 @@ function deriveSunscreenType(uvFilters) {
 function buildCanonical(data) {
   const uvFilters = detectUvFilters(data.ingredients_inci);
   const sunscreenType = deriveSunscreenType(uvFilters);
+  const id = generateId(data.brand, data.product_name);
 
   return {
+    id,
+
     brand: data.brand,
     product: data.product_name,
 
-    type: sunscreenType,
+    type: sunscreenType, // mineral | chemical | hybrid | null
 
     spf: data.spf
       ? Number(data.spf.replace(/\D/g, "")) || null
@@ -162,6 +184,7 @@ if (process.env.ISSUE_BODY) {
     const canonical = buildCanonical(parsed);
 
     // 🔑 EXPORT FOR NEXT STEPS
+    exportEnv("SUNSCREEN_ID", canonical.id);
     exportEnv("SUNSCREEN_BRAND", canonical.brand);
     exportEnv("SUNSCREEN_PRODUCT", canonical.product);
 
@@ -169,6 +192,7 @@ if (process.env.ISSUE_BODY) {
     console.log(JSON.stringify(canonical, null, 2));
 
     console.log("✅ Exported env vars:");
+    console.log(`SUNSCREEN_ID=${canonical.id}`);
     console.log(`SUNSCREEN_BRAND=${canonical.brand}`);
     console.log(`SUNSCREEN_PRODUCT=${canonical.product}`);
   } catch (err) {
