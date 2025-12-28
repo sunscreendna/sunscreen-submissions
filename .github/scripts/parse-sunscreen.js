@@ -74,6 +74,23 @@ function validateRequired(data) {
 }
 
 /**
+ * Derive sunscreen type from UV filters
+ */
+function deriveSunscreenType(uvFilters) {
+  if (!uvFilters || uvFilters.length === 0) return null;
+
+  const hasMineral = uvFilters.some(f => f.type === "mineral");
+  const hasChemical = uvFilters.some(f => f.type === "chemical");
+
+  if (hasMineral && hasChemical) return "hybrid";
+  if (hasMineral) return "mineral";
+  if (hasChemical) return "chemical";
+
+  return null;
+}
+
+
+/**
  * Build canonical sunscreen object (dry run)
  */
 function buildCanonical(data) {
