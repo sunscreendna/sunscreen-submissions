@@ -1,10 +1,8 @@
+import fs from "fs";
 import { UV_FILTERS } from "./uv-filters.js";
 
 /**
  * Extract the text that follows a given markdown section heading
- * Example:
- * ### Brand name
- * Abib
  */
 function extractSection(body, heading) {
   const regex = new RegExp(
@@ -15,7 +13,7 @@ function extractSection(body, heading) {
   if (!match) return null;
 
   return match[1]
-    .replace(/```[a-z]*?/gi, "") // remove code fences if present
+    .replace(/```[a-z]*?/gi, "")
     .trim();
 }
 
@@ -52,10 +50,7 @@ function detectUvFilters(ingredients) {
   const detected = [];
 
   for (const filter of UV_FILTERS) {
-    const names = [
-      filter.inci,
-      ...(filter.aka || [])
-    ];
+    const names = [filter.inci, ...(filter.aka || [])];
 
     for (const name of names) {
       if (text.includes(name.toLowerCase())) {
@@ -112,7 +107,7 @@ function buildCanonical(data) {
     brand: data.brand,
     product: data.product_name,
 
-    type: sunscreenType, // mineral | chemical | hybrid | null
+    type: sunscreenType,
 
     spf: data.spf
       ? Number(data.spf.replace(/\D/g, "")) || null
@@ -126,10 +121,22 @@ function buildCanonical(data) {
 
     ingredients: splitIngredients(data.ingredients_inci),
 
-    // editorial-only (kept out of site JSON later)
+    // editorial-only
     source_url: data.source_url || null,
     notes: data.notes || null
   };
+}
+
+/**
+ * Write env vars for downstream GitHub Actions steps
+ */
+function exportEnv(key, value) {
+  if (!process.env.GITHUB_ENV) return;
+
+  fs.appendFileSync(
+    process.env.GITHUB_ENV,
+    `${key}=${value}\n`
+  );
 }
 
 /**
@@ -154,8 +161,16 @@ if (process.env.ISSUE_BODY) {
 
     const canonical = buildCanonical(parsed);
 
+    // 🔑 EXPORT FOR NEXT STEPS
+    exportEnv("SUNSCREEN_BRAND", canonical.brand);
+    exportEnv("SUNSCREEN_PRODUCT", canonical.product);
+
     console.log("🧪 Canonical sunscreen object (dry run):");
     console.log(JSON.stringify(canonical, null, 2));
+
+    console.log("✅ Exported env vars:");
+    console.log(`SUNSCREEN_BRAND=${canonical.brand}`);
+    console.log(`SUNSCREEN_PRODUCT=${canonical.product}`);
   } catch (err) {
     console.error("❌ Parsing failed:", err.message);
     process.exit(1);
