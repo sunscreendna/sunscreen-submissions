@@ -34,12 +34,6 @@ jobs:
           npm install
           node parse-sunscreen.js
 
-      - name: Generate sunscreen ID (log only)
-        run: node scripts/generateSunscreenEntry.js
-        env:
-          SUNSCREEN_BRAND: ${{ env.SUNSCREEN_BRAND }}
-          SUNSCREEN_PRODUCT: ${{ env.SUNSCREEN_PRODUCT }}
-
       # ✅ NEW: write to sunscreens.json (can fail on duplicate)
       - name: Write sunscreen to JSON
         run: node scripts/write-sunscreen-json.js
